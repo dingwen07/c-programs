@@ -32,5 +32,6 @@ int buffer_getline(int fd, buffer_t *buffer);
 
 void buffer_inspect(buffer_t *buffer, int mode);
 void buffer_zero(buffer_t *buffer);
+void buffer_set(buffer_t *buffer, int value, unsigned int len);
 
 #endif

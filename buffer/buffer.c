@@ -2,8 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <limits.h>
 
 #include "buffer.h"
+
+#define BUF_CAPA_THR UINT_MAX/BUF_INCR_RATE
 
 
 buffer_t *buffer_new(void) {
@@ -33,9 +36,19 @@ void buffer_ensure(buffer_t *buffer, unsigned int size) {
         buffer->capacity = BUF_INIT_SIZE;
     }
     unsigned int total_size = buffer->len + size;
+    if (total_size < buffer->len || total_size < size) {
+        // overflow
+        fprintf(stderr, "ERROR buffer_ensure: buffer size too large\n");
+        abort();
+    }
     if (total_size > buffer->capacity) {
         unsigned int new_capacity = buffer->capacity;
+        unsigned int threshold = BUF_CAPA_THR;
         while (total_size > new_capacity) {
+            if (new_capacity > threshold) {
+                new_capacity = total_size;
+                break;
+            }
             new_capacity *= BUF_INCR_RATE;
         }
         buffer->data = realloc(buffer->data, new_capacity);
@@ -159,4 +172,11 @@ void buffer_inspect(buffer_t *buffer, int mode) {
 
 void buffer_zero(buffer_t *buffer) {
     memset(buffer->data, 0, buffer->capacity);
+}
+
+void buffer_set(buffer_t *buffer, int value, unsigned int len) {
+    buffer_ensure(buffer, len);
+    memset(buffer->data, value, len);
+    buffer->len = len;
+    buffer_null_terminate(buffer);
 }
