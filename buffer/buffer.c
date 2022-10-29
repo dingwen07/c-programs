@@ -75,6 +75,19 @@ int buffer_copy(buffer_t *dest, const buffer_t *src) {
 }
 
 
+int buffer_compare(const buffer_t *buf1, const buffer_t *buf2) {
+    if (buf1 == NULL || buf2 == NULL) {
+        return -1;
+    }
+
+    if (buf1->len != buf2->len) {
+        return buf1->len - buf2->len;
+    }
+
+    return memcmp(buf1->data, buf2->data, buf1->len);
+}
+
+
 int buffer_write(int fd, buffer_t *buffer) {
     if (buffer == NULL) {
         return -1;

@@ -24,6 +24,7 @@ void buffer_null_terminate(buffer_t *buffer);
 
 int buffer_append(buffer_t *buffer, const void *data, unsigned int len);
 int buffer_copy(buffer_t *dest, const buffer_t *src);
+int buffer_compare(const buffer_t *buf1, const buffer_t *buf2);
 
 int buffer_write(int fd, buffer_t *buffer);
 int buffer_read(int fd, buffer_t *buffer, unsigned int count);
