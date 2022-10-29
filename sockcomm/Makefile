@@ -7,7 +7,7 @@ all: sockcomm
 sockcomm: sockcomm.o buffer.o
 	$(CC) $(CFLAGS) -o sockcomm sockcomm.o buffer.o
 
-sockcomm.o: sockcomm.c
+sockcomm.o: sockcomm.c ../include/buffer.h
 	$(CC) $(CFLAGS) -c sockcomm.c
 
 buffer.o: ../buffer/buffer.c

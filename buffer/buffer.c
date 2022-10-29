@@ -35,7 +35,7 @@ void buffer_ensure(buffer_t *buffer, unsigned int size) {
     unsigned int total_size = buffer->len + size;
     if (total_size > buffer->capacity) {
         unsigned int new_capacity = buffer->capacity;
-        while (total_size > buffer->capacity) {
+        while (total_size > new_capacity) {
             new_capacity *= BUF_INCR_RATE;
         }
         buffer->data = realloc(buffer->data, new_capacity);
@@ -155,4 +155,8 @@ void buffer_inspect(buffer_t *buffer, int mode) {
     }
     fwrite(buffer->data, 1, len, fp);
     pclose(fp);
+}
+
+void buffer_zero(buffer_t *buffer) {
+    memset(buffer->data, 0, buffer->capacity);
 }

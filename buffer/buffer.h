@@ -1,7 +1,7 @@
 #ifndef _BUFFER_H_
 #define _BUFFER_H_
 
-#define BUF_INIT_SIZE 128
+#define BUF_INIT_SIZE 64
 #define BUF_INCR_RATE 2
 #define BUF_INSP_BUF 0
 #define BUF_INSP_EXT 1
@@ -29,6 +29,8 @@ int buffer_compare(const buffer_t *buf1, const buffer_t *buf2);
 int buffer_write(int fd, buffer_t *buffer);
 int buffer_read(int fd, buffer_t *buffer, unsigned int count);
 int buffer_getline(int fd, buffer_t *buffer);
+
 void buffer_inspect(buffer_t *buffer, int mode);
+void buffer_zero(buffer_t *buffer);
 
 #endif

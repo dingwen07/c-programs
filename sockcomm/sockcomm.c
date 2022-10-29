@@ -24,17 +24,17 @@ int main(int argc, char *argv[])
     // <server ip> <port>
 
     if (argc < 3) {
-        printf("Enter server IP: ");
+        fprintf(stderr, "Enter server IP: ");
         buffer_getline(STDIN_FILENO, serv_ip);
         serv_ip->len--;
         buffer_null_terminate(serv_ip);
-        printf("Enter port number: ");
+        fprintf(stderr, "Enter port number: ");
         scanf("%d", &portno);
     } else {
         buffer_append(serv_ip, argv[1], strlen(argv[1]));
         portno = atoi(argv[2]);
     }
-    buffer_inspect(serv_ip, BUF_INSP_ALL);
+    // buffer_inspect(serv_ip, BUF_INSP_ALL); // DEBUG
 
     // get address info
     memset(&hints, 0, sizeof (hints));
@@ -49,12 +49,13 @@ int main(int argc, char *argv[])
     // print address
     buffer_t *ipstr = buffer_new();
     buffer_ensure(ipstr, INET6_ADDRSTRLEN);
+    // buffer_zero(ipstr); // DEBUG
     inet_ntop(servinfo->ai_family, servinfo->ai_addr->sa_data, (char *)ipstr->data, ipstr->capacity);
     ipstr->len = strlen((char *)ipstr->data);
     buffer_null_terminate(ipstr);
     buffer_inspect(ipstr, BUF_INSP_ALL);
 
-    printf("Trying %s...\n", (char *)ipstr->data);
+    fprintf(stderr, "Trying %s...\n", (char *)ipstr->data);
 
     // create socket
     if (servinfo->ai_family == AF_INET) {
@@ -90,7 +91,6 @@ int main(int argc, char *argv[])
             FD_SET(STDIN_FILENO, &readfds);
         }
         FD_SET(sockfd, &readfds);
-        fprintf(stderr, "selecting...\n");
         select(sockfd + 1, &readfds, NULL, NULL, NULL);
         // get fd with data
         int readfd;
@@ -99,14 +99,14 @@ int main(int argc, char *argv[])
         } else if (FD_ISSET(sockfd, &readfds)) {
             readfd = sockfd;
         } else {
-            continue;
+            fprintf(stderr, "select error\n");
+            exit(1);
         }
         // read data from fd
         if (readfd == STDIN_FILENO) {
-            fprintf(stderr, "Reading from stdin...\n");
             n = buffer_read(STDIN_FILENO, clin_buf, 1);
             if (n == 0) {
-                // fprintf(stderr, "STDIN EOF\n");
+                fprintf(stderr, "STDIN EOF\n");
                 stdin_eof = 1;
                 // shutdown(sockfd, SHUT_WR);
                 continue;
@@ -114,9 +114,9 @@ int main(int argc, char *argv[])
             if (((char *)clin_buf->data)[clin_buf->len - 1] == '\n') {
                 n = buffer_write(sockfd, clin_buf);
                 buffer_reset(clin_buf);
+                // buffer_zero(clin_buf); // DEBUG
             }
         } else if (readfd == sockfd) {
-            fprintf(stderr, "Reading from socket...\n");
             n = read(sockfd, &c, 1);
             if (n == 0) {
                 fprintf(stderr, "Server closed connection\n");
