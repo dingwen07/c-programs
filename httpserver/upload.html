@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>File Upload</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+    <h1>File Upload</h1>
+    <form id="uploadForm">
+        <label for="urlBox">URL:</label><br>
+        <input type="text" id="urlBox" name="url"><br><br>
+        <label for="fileBox">Select file:</label><br>
+        <input type="file" id="fileBox" name="file"><br><br>
+        <input type="button" value="Upload" onclick="uploadFile()">
+    </form>
+    <script>
+        function uploadFile() {
+            var url = document.getElementById('urlBox').value;
+            var fileInput = document.getElementById('fileBox');
+            var file = fileInput.files[0];
+            fetch(url, {
+                method: 'PUT',
+                body: file,
+                headers: {
+                    'Content-Type': 'application/octet-stream'
+                }
+            })
+            .then(response => response.text())
+            .then(data => {
+                console.log(data);
+            })
+            .catch(error => {
+                console.error(error);
+            });
+        }
+    </script>
+</body>
+</html>
