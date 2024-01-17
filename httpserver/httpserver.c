@@ -22,7 +22,7 @@ void url_decode(char *dst, const char *src);
 void handle_get_request(int client_socket, const char *path);
 void handle_put_request(int client_socket, const char *path);
 void handle_request(int client_socket, const char *path);
-int get_content_length(const char *headers);
+long int get_content_length(const char *headers);
 int get_header_length(const char *headers);
 bool isValidUTF8(unsigned char *s, size_t length);
 bool isUTF8File(FILE *fp);
@@ -317,13 +317,13 @@ void handle_put_request(int client_socket, const char *path) {
   printf("PUT %s - 200 OK\n", file_path);
 }
 */
-int get_content_length(const char *headers) {
+long int get_content_length(const char *headers) {
     const char *header_start = headers;
     const char *header_end;
 
     while ((header_end = strstr(header_start, "\r\n")) != NULL) {
         if (strncmp(header_start, "Content-Length:", 15) == 0) {
-            int content_length = atoi(header_start + 15);
+            long int content_length = strtol(header_start + 15, NULL, 10);
             return content_length;
         }
         header_start = header_end + 2; // Skip the "\r\n"
@@ -350,7 +350,7 @@ void handle_put_request(int client_socket, const char *path) {
     char buffer[BUFSIZE];
     char header[MAX_HEADER_LENGTH];
     int bytes_read = recv(client_socket, buffer, BUFSIZE, MSG_PEEK);
-    int content_length = get_content_length(buffer);
+    long int content_length = get_content_length(buffer);
     int header_length = get_header_length(buffer);
     recv(client_socket, buffer, header_length, 0); // Read the headers (and discard them)
 
@@ -389,6 +389,7 @@ void handle_put_request(int client_socket, const char *path) {
       // bad request
       send(client_socket, HTTP_400, strlen(HTTP_400), 0);
       printf("PUT %s - 400 Bad Request\n", file_path);
+      printf("Content-Length: %ld\n", content_length);
       return;
     }
 
@@ -400,7 +401,7 @@ void handle_put_request(int client_socket, const char *path) {
       return;
     }
 
-    int total_bytes_written = 0;
+    long int total_bytes_written = 0;
     while (total_bytes_written < content_length) {
         bytes_read = recv(client_socket, buffer, sizeof(buffer), 0);
         if (bytes_read <= 0) {
