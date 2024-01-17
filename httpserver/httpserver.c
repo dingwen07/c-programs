@@ -26,6 +26,7 @@ int get_content_length(const char *headers);
 int get_header_length(const char *headers);
 bool isValidUTF8(unsigned char *s, size_t length);
 bool isUTF8File(FILE *fp);
+void sigint_handler(int sig_num);
 
 char HTTP_400[] = "HTTP/1.1 400 Bad Request\r\n\r\n";
 char HTTP_404[] = "HTTP/1.1 404 Not Found\r\n\r\n";
@@ -76,6 +77,9 @@ char UPLOAD_HTML[BUFSIZE] =
 "    </script>\n"
 "</body>\n"
 "</html>\n";
+
+// global variable
+volatile sig_atomic_t keep_running = 1;
 
 bool isValidUTF8(unsigned char *s, size_t length) {
     size_t i = 0;
@@ -190,6 +194,18 @@ void handle_get_request(int client_socket, const char *path) {
     char buffer[BUFSIZE];
     sprintf(buffer, UPLOAD_HTML);
     send(client_socket, buffer, strlen(buffer), 0);
+    return;
+  }
+
+  if (strcmp(request, "/stop") == 0) {
+    sprintf(header, "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n");
+    send(client_socket, header, strlen(header), 0);
+    printf("GET %s - 200 OK\n", file_path);
+
+    char buffer[BUFSIZE];
+    sprintf(buffer, "<html><body><h1>Server Stopped</h1></body></html>");
+    send(client_socket, buffer, strlen(buffer), 0);
+    keep_running = 0;
     return;
   }
 
@@ -430,6 +446,10 @@ void handle_request(int client_socket, const char *path) {
   }
 }
 
+// Signal handler
+void sigint_handler(int sig_num) {
+    keep_running = 0; // Set to false to stop the server loop
+}
 
 int main(int argc, char *argv[]) {
   const char *listen_address = DEFAULT_LISTEN_ADDRESS;
@@ -437,6 +457,8 @@ int main(int argc, char *argv[]) {
   char path[BUFSIZE] = ".";
 
   signal(SIGPIPE, SIG_IGN);
+  signal(SIGINT, sigint_handler);
+  signal(SIGTERM, sigint_handler);
 
   for (int i = 1; i < argc; i++) {
     if (strcmp(argv[i], "--listen") == 0 && i + 1 < argc) {
@@ -488,6 +510,11 @@ int main(int argc, char *argv[]) {
       continue;
     }
 
+    if (!keep_running) {
+      // end server loop
+      break;
+    }
+
     handle_request(client_socket, path);
 
     shutdown(client_socket, SHUT_RDWR);
@@ -495,5 +522,7 @@ int main(int argc, char *argv[]) {
     close(client_socket);
   }
 
+  printf("Stopping server...\n");
+  close(listen_socket);
   return 0;
 }
