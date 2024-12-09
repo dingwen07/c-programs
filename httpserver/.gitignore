@@ -1,1 +1,7 @@
 httpserver
+httpserver-amd64
+httpserver-arm64
+httpserver-universal
+
+*.zip
+*.dmg

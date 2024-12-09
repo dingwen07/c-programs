@@ -263,9 +263,16 @@ void handle_get_request(int client_socket, const char *path) {
     int file_size = ftell(fp);
     fseek(fp, 0L, SEEK_SET);
     // Compose and send header
+    char* content_type;
+    // if file end with html, htm, then it is text/html
+    if (strstr(file_path, ".html") != NULL || strstr(file_path, ".htm") != NULL) {
+      content_type = "text/html; charset=UTF-8";
+    } else {
+      content_type = isUTF8 ? "text/plain; charset=UTF-8" : "application/octet-stream";
+    }
     // char header[256];
     sprintf(header, "HTTP/1.1 200 OK\r\nContent-Type: %s\r\nContent-Length: %d\r\n\r\n", 
-            isUTF8 ? "text/plain; charset=UTF-8" : "application/octet-stream", file_size);
+      content_type, file_size);
     send(client_socket, header, strlen(header), 0);
     printf("GET %s - 200 OK\n", file_path);
 
